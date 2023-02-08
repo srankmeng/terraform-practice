@@ -17,7 +17,7 @@ provider "aws" {
 }
 
 locals {
-  db_creds = jsondecode(data.aws_secretsmanager_secret_version.terraform_db_current.secret_string)
+  db_creds = jsondecode(data.aws_secretsmanager_secret_version.terraform_db_credentials.secret_string)
 }
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc
