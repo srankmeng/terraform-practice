@@ -12,8 +12,9 @@ terraform {
 
 provider "aws" {
   region  = var.region
-  access_key = var.aws_access_key
-  secret_key = var.aws_secret_key
+  profile = "default"
+  # access_key = var.aws_access_key
+  # secret_key = var.aws_secret_key
 }
 
 resource "random_password" "random_db_password" {
