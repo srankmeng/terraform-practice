@@ -16,8 +16,33 @@ provider "aws" {
   secret_key = var.aws_secret_key
 }
 
+resource "random_password" "random_db_password" {
+  length = 16
+  special = false
+}
+
 locals {
-  db_creds = jsondecode(data.aws_secretsmanager_secret_version.terraform_db_credentials.secret_string)
+  db_password = tomap({
+    password = random_password.random_db_password.result
+  })
+}
+
+
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret
+resource "aws_secretsmanager_secret" "db_secret" {
+  name = "terraform_postgres_db"
+  description = "Secret was created by Terraform"
+  recovery_window_in_days = 0
+
+  tags = {
+    Name = "Secret was created by Terraform"
+  }
+}
+
+# https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version
+resource "aws_secretsmanager_secret_version" "db_secret_version" {
+  secret_id = aws_secretsmanager_secret.db_secret.id
+  secret_string = jsonencode(local.db_password)
 }
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc
@@ -128,9 +153,9 @@ resource "aws_db_instance" "rds" {
   engine_version         = "12.13"
   skip_final_snapshot    = true
   publicly_accessible    = true
-  db_subnet_group_name    = aws_db_subnet_group.db_subnet_group.id
+  db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.id
   vpc_security_group_ids = [aws_security_group.ec2.id]
-  db_name                = local.db_creds.dbname
-  username               = local.db_creds.username
-  password               = local.db_creds.password
+  db_name                = "terraform_db"
+  username               = "postgres"
+  password               = random_password.random_db_password.result
 }
