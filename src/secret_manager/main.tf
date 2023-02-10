@@ -11,7 +11,7 @@ terraform {
 
 provider "aws" {
   region  = var.region
-  profile = "default"
+  profile = var.profile
 }
 
 resource "random_password" "random_db_password" {
