@@ -12,7 +12,7 @@ terraform {
 
 provider "aws" {
   region  = var.region
-  profile = "default"
+  profile = var.profile
   # access_key = var.aws_access_key
   # secret_key = var.aws_secret_key
 }
@@ -23,9 +23,13 @@ resource "random_password" "random_db_password" {
 }
 
 locals {
-  db_password = tomap({
-    password = random_password.random_db_password.result
-  })
+  # # when use json (key/value)
+  # db_password = tomap({
+  #   password = random_password.random_db_password.result
+  # })
+
+  # when use plain text
+  db_password = random_password.random_db_password.result
 }
 
 
@@ -43,7 +47,8 @@ resource "aws_secretsmanager_secret" "db_secret" {
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version
 resource "aws_secretsmanager_secret_version" "db_secret_version" {
   secret_id = aws_secretsmanager_secret.db_secret.id
-  secret_string = jsonencode(local.db_password)
+  # secret_string = jsonencode(local.db_password) # when use json (key/value)
+  secret_string = local.db_password # when use plain text
 }
 
 # https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/vpc
