@@ -19,7 +19,7 @@ resource "aws_vpc" "vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "VPC was created by Terraform"
+    Name = "terraform vpc"
   }
 }
 
@@ -27,7 +27,7 @@ resource "aws_internet_gateway" "igw" {
   vpc_id = aws_vpc.vpc.id
   
   tags = {
-    Name = "IGW was created by Terraform"
+    Name = "terraform igw"
   }
 }
 
@@ -38,7 +38,7 @@ resource "aws_subnet" "public_subnets" {
   availability_zone = element(var.azs, count.index)
   
   tags = {
-    Name = "Public Subnet ${count.index + 1} was created by Terraform"
+    Name = "terraform public subnet ${count.index + 1}"
   }
 }
 
@@ -51,7 +51,7 @@ resource "aws_route_table" "route_table" {
   }
   
   tags = {
-    Name = "Route Table was created by Terraform"
+    Name = "terraform route table"
   }
 }
 
@@ -98,6 +98,6 @@ resource "aws_security_group" "ec2" {
   }
 
   tags = {
-    Name = "Security group was created by Terraform"
+    Name = "terraform security group"
   }
 }

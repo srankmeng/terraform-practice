@@ -1,17 +1,19 @@
 data "aws_vpc" "vpc" {
   tags = {
-    Name = "VPC was created by Terraform"
+    Name = "terraform vpc"
   }
 }
 
 data "aws_subnets" "public_subnets" {
   tags = {
-    Name = "Public Subnet * was created by Terraform"
+    Name = "terraform public subnet*"
   }
 }
 
 data "aws_security_group" "ec2" {
-  name = "terraform-sg"
+  tags = {
+    Name = "terraform security group"
+  }
 }
 
 data "aws_secretsmanager_secret" "terraform_db" {

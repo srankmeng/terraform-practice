@@ -15,7 +15,11 @@ provider "aws" {
 }
 
 locals {
-  db_creds = jsondecode(data.aws_secretsmanager_secret_version.terraform_db_credentials.secret_string)
+  # # when use json (key/value)
+  # db_creds = jsondecode(data.aws_secretsmanager_secret_version.terraform_db_credentials.secret_string)
+
+  # when use plain text
+  db_creds = data.aws_secretsmanager_secret_version.terraform_db_credentials.secret_string
 }
 
 resource "aws_db_subnet_group" "db_subnet_group" {
@@ -35,7 +39,7 @@ resource "aws_db_instance" "rds" {
   vpc_security_group_ids = [data.aws_security_group.ec2.id]
   db_name                = "terraform_db"
   username               = "postgres"
-  password               = local.db_creds.password
+  password               = local.db_creds
 }
 
 

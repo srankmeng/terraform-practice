@@ -20,22 +20,27 @@ resource "random_password" "random_db_password" {
 }
 
 locals {
-  db_password = tomap({
-    password = random_password.random_db_password.result
-  })
+  # # when use json (key/value)
+  # db_password = tomap({
+  #   password = random_password.random_db_password.result
+  # })
+
+  # when use plain text
+  db_password = random_password.random_db_password.result
 }
 
 resource "aws_secretsmanager_secret" "db_secret" {
   name = "terraform_postgres_db"
-  description = "Secret was created by Terraform"
+  description = "terraform secret"
   recovery_window_in_days = 0
 
   tags = {
-    Name = "Secret was created by Terraform"
+    Name = "terraform secret"
   }
 }
 
 resource "aws_secretsmanager_secret_version" "db_secret_version" {
   secret_id = aws_secretsmanager_secret.db_secret.id
-  secret_string = jsonencode(local.db_password)
+  # secret_string = jsonencode(local.db_password) # when use json (key/value)
+  secret_string = local.db_password # when use plain text
 }
