@@ -4,15 +4,15 @@ data "aws_vpc" "vpc" {
   }
 }
 
-data "aws_subnets" "public_subnets" {
+data "aws_subnets" "private_subnets_database" {
   tags = {
-    Name = "terraform public subnet*"
+    Name = "terraform private subnet database*"
   }
 }
 
-data "aws_security_group" "ec2" {
+data "aws_security_group" "rds" {
   tags = {
-    Name = "terraform security group"
+    Name = "terraform security group rds"
   }
 }
 

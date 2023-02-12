@@ -24,7 +24,7 @@ locals {
 
 resource "aws_db_subnet_group" "db_subnet_group" {
   name       = "db-subnet-group"
-  subnet_ids = data.aws_subnets.public_subnets.ids
+  subnet_ids = data.aws_subnets.private_subnets_database.ids
 }
 
 resource "aws_db_instance" "rds" {
@@ -36,7 +36,7 @@ resource "aws_db_instance" "rds" {
   skip_final_snapshot    = true
   publicly_accessible    = true
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.id
-  vpc_security_group_ids = [data.aws_security_group.ec2.id]
+  vpc_security_group_ids = [data.aws_security_group.rds.id]
   db_name                = "terraform_db"
   username               = "postgres"
   password               = local.db_creds

@@ -31,18 +31,51 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-resource "aws_subnet" "public_subnets" {
-  count      = length(var.public_subnet_cidrs)
+resource "aws_subnet" "public_subnets_frontend" {
+  count      = length(var.public_subnet_frontend_cidrs)
   vpc_id     = aws_vpc.vpc.id
-  cidr_block = element(var.public_subnet_cidrs, count.index)
+  cidr_block = element(var.public_subnet_frontend_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
   
   tags = {
-    Name = "terraform public subnet ${count.index + 1}"
+    Name = "terraform public subnet frontend ${count.index + 1}"
   }
 }
 
-resource "aws_route_table" "route_table" {
+resource "aws_subnet" "public_subnets_api_gw" {
+  count      = length(var.public_subnet_api_gw_cidrs)
+  vpc_id     = aws_vpc.vpc.id
+  cidr_block = element(var.public_subnet_api_gw_cidrs, count.index)
+  availability_zone = element(var.azs, count.index)
+  
+  tags = {
+    Name = "terraform public subnet api gw ${count.index + 1}"
+  }
+}
+
+resource "aws_subnet" "private_subnets_backend" {
+  count      = length(var.private_subnet_backend_cidrs)
+  vpc_id     = aws_vpc.vpc.id
+  cidr_block = element(var.private_subnet_backend_cidrs, count.index)
+  availability_zone = element(var.azs, count.index)
+  
+  tags = {
+    Name = "terraform private subnet backend ${count.index + 1}"
+  }
+}
+
+resource "aws_subnet" "private_subnets_database" {
+  count      = length(var.private_subnet_database_cidrs)
+  vpc_id     = aws_vpc.vpc.id
+  cidr_block = element(var.private_subnet_database_cidrs, count.index)
+  availability_zone = element(var.azs, count.index)
+  
+  tags = {
+    Name = "terraform private subnet database ${count.index + 1}"
+  }
+}
+
+resource "aws_route_table" "route_table_frontend" {
   vpc_id = aws_vpc.vpc.id
   
   route {
@@ -51,27 +84,66 @@ resource "aws_route_table" "route_table" {
   }
   
   tags = {
-    Name = "terraform route table"
+    Name = "terraform frontend route table"
   }
 }
 
-resource "aws_route_table_association" "public_subnet_asso" {
-  count = length(var.public_subnet_cidrs)
-  subnet_id = element(aws_subnet.public_subnets[*].id, count.index)
-  route_table_id = aws_route_table.route_table.id
-}
-
-resource "aws_security_group" "ec2" {
-  name = "terraform-sg"
+resource "aws_route_table" "route_table_api_gw" {
   vpc_id = aws_vpc.vpc.id
-
-  ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    description = "Postgres"
-    cidr_blocks = ["0.0.0.0/0"]
+  
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw.id
   }
+  
+  tags = {
+    Name = "terraform api gw route table"
+  }
+}
+
+resource "aws_route_table" "route_table_backend" {
+  vpc_id = aws_vpc.vpc.id
+  
+  tags = {
+    Name = "terraform backend route table"
+  }
+}
+
+resource "aws_route_table" "route_table_database" {
+  vpc_id = aws_vpc.vpc.id
+  
+  tags = {
+    Name = "terraform database route table"
+  }
+}
+
+resource "aws_route_table_association" "public_subnet_asso_frontend" {
+  count = length(var.public_subnet_frontend_cidrs)
+  subnet_id = element(aws_subnet.public_subnets_frontend[*].id, count.index)
+  route_table_id = aws_route_table.route_table_frontend.id
+}
+
+resource "aws_route_table_association" "public_subnet_asso_api_gw" {
+  count = length(var.public_subnet_api_gw_cidrs)
+  subnet_id = element(aws_subnet.public_subnets_api_gw[*].id, count.index)
+  route_table_id = aws_route_table.route_table_api_gw.id
+}
+
+resource "aws_route_table_association" "private_subnet_asso_backend" {
+  count = length(var.private_subnet_backend_cidrs)
+  subnet_id = element(aws_subnet.private_subnets_backend[*].id, count.index)
+  route_table_id = aws_route_table.route_table_backend.id
+}
+
+resource "aws_route_table_association" "private_subnet_asso_database" {
+  count = length(var.private_subnet_database_cidrs)
+  subnet_id = element(aws_subnet.private_subnets_database[*].id, count.index)
+  route_table_id = aws_route_table.route_table_database.id
+}
+
+resource "aws_security_group" "web" {
+  name = "terraform-sg-web"
+  vpc_id = aws_vpc.vpc.id
 
   ingress {
     from_port   = 80
@@ -98,6 +170,48 @@ resource "aws_security_group" "ec2" {
   }
 
   tags = {
-    Name = "terraform security group"
+    Name = "terraform security group web"
+  }
+}
+
+resource "aws_security_group" "api" {
+  name = "terraform-sg-api"
+  vpc_id = aws_vpc.vpc.id
+
+  ingress {
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    description = "HTTP"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    description = "HTTPS"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "terraform security group api"
+  }
+}
+
+resource "aws_security_group" "rds" {
+  name = "terraform-sg-rds"
+  vpc_id = aws_vpc.vpc.id
+
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    description = "Postgres"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "terraform security group rds"
   }
 }
