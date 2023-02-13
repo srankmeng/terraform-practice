@@ -38,7 +38,7 @@ resource "aws_subnet" "public_subnets_frontend" {
   availability_zone = element(var.azs, count.index)
   
   tags = {
-    Name = "terraform public subnet frontend ${count.index + 1}"
+    Name = "terraform public subnet web ${count.index + 1}"
   }
 }
 
@@ -60,7 +60,7 @@ resource "aws_subnet" "private_subnets_backend" {
   availability_zone = element(var.azs, count.index)
   
   tags = {
-    Name = "terraform private subnet backend ${count.index + 1}"
+    Name = "terraform private subnet application ${count.index + 1}"
   }
 }
 

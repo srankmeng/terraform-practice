@@ -29,7 +29,7 @@ data "aws_vpc" "vpc" {
 
 data "aws_subnets" "private_subnets_backend" {
   tags = {
-    Name = "terraform private subnet backend*"
+    Name = "terraform private subnet application*"
   }
 }
 

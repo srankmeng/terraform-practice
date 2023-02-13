@@ -29,7 +29,7 @@ data "aws_vpc" "vpc" {
 
 data "aws_subnets" "public_subnets_frontend" {
   tags = {
-    Name = "terraform public subnet frontend*"
+    Name = "terraform public subnet web*"
   }
 }
 
