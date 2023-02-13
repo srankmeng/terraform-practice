@@ -32,3 +32,9 @@ data "aws_subnets" "public_subnets_frontend" {
     Name = "terraform public subnet frontend*"
   }
 }
+
+data "aws_lb" "backend_alb" {
+  tags = {
+    Name = "terraform backend alb"
+  }
+}

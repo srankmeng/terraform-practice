@@ -21,7 +21,12 @@ resource "aws_ecs_task_definition" "backend_task" {
     {
       "name": "backend_task",
       "image": "${data.aws_ecr_repository.backend_ecr.repository_url}",
-      "environment": ${jsonencode(var.docker_variables)},
+      "environment": ${jsonencode([
+        {
+          "name": "DB_PASSWORD",
+          "value": "${data.aws_secretsmanager_secret_version.terraform_db_credentials.secret_string}",
+        }
+      ])},
       "essential": true,
       "portMappings": [
         {
@@ -85,6 +90,10 @@ resource "aws_alb" "backend_alb" {
   load_balancer_type = "application"
   subnets = data.aws_subnets.private_subnets_backend.ids
   security_groups = [aws_security_group.load_balancer_security_group.id]
+
+  tags = {
+    Name = "terraform backend alb"
+  }
 }
 
 resource "aws_security_group" "load_balancer_security_group" {

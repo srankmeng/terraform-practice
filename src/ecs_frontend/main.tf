@@ -21,7 +21,12 @@ resource "aws_ecs_task_definition" "frontend_task" {
     {
       "name": "frontend_task",
       "image": "${data.aws_ecr_repository.frontend_ecr.repository_url}",
-      "environment": ${jsonencode(var.docker_variables)},
+      "environment": ${jsonencode([
+        {
+          "name": "API_URL",
+          "value": "http://${data.aws_lb.backend_alb.dns_name}/users",
+        }
+      ])},
       "essential": true,
       "portMappings": [
         {
