@@ -12,7 +12,7 @@ variable "docker_variables"{
   default = [
     {
       "name": "API_URL",
-      "value": "http://localhost:5000"
+      "value": "http://backend-alb-1066745585.ap-southeast-1.elb.amazonaws.com/users"
     }
   ]
 }

@@ -27,6 +27,23 @@ resource "aws_db_subnet_group" "db_subnet_group" {
   subnet_ids = data.aws_subnets.private_subnets_database.ids
 }
 
+resource "aws_security_group" "rds" {
+  name = "terraform-sg-rds"
+  vpc_id = data.aws_vpc.vpc.id
+
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    description = "Postgres"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "terraform security group rds"
+  }
+}
+
 resource "aws_db_instance" "rds" {
   identifier             = "rds-terraform"
   instance_class         = "db.t2.micro"
@@ -36,7 +53,7 @@ resource "aws_db_instance" "rds" {
   skip_final_snapshot    = true
   publicly_accessible    = true
   db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.id
-  vpc_security_group_ids = [data.aws_security_group.rds.id]
+  vpc_security_group_ids = [aws_security_group.rds.id]
   db_name                = "terraform_db"
   username               = "postgres"
   password               = local.db_creds

@@ -14,14 +14,6 @@ provider "aws" {
   profile = var.profile
 }
 
-resource "aws_ecs_cluster" "cluster" {
-  name = "tf_cluster"
-
-  tags = {
-    Name = "terraform cluster"
-  }
-}
-
 resource "aws_ecs_task_definition" "frontend_task" {
   family                   = "frontend_task"
   container_definitions    = <<DEFINITION
@@ -46,22 +38,12 @@ resource "aws_ecs_task_definition" "frontend_task" {
   network_mode             = "awsvpc"    # Using awsvpc as our network mode as this is required for Fargate
   memory                   = 512         # Specifying the memory our container requires
   cpu                      = 256         # Specifying the CPU our container requires
-  execution_role_arn       = aws_iam_role.ecsTaskExecutionRole.arn
-}
-
-resource "aws_iam_role" "ecsTaskExecutionRole" {
-  name               = "ecsTaskExecutionRole"
-  assume_role_policy = data.aws_iam_policy_document.assume_role_policy.json
-}
-
-resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
-  role       = aws_iam_role.ecsTaskExecutionRole.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+  execution_role_arn       = data.aws_iam_role.ecsTaskExecutionRole.arn
 }
 
 resource "aws_ecs_service" "frontend_service" {
   name            = "frontend_service"
-  cluster         = aws_ecs_cluster.cluster.id
+  cluster         = data.aws_ecs_cluster.cluster.id
   task_definition = aws_ecs_task_definition.frontend_task.arn
   launch_type     = "FARGATE"
   desired_count   = 1

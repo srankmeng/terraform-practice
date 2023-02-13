@@ -140,20 +140,3 @@ resource "aws_route_table_association" "private_subnet_asso_database" {
   subnet_id = element(aws_subnet.private_subnets_database[*].id, count.index)
   route_table_id = aws_route_table.route_table_database.id
 }
-
-resource "aws_security_group" "rds" {
-  name = "terraform-sg-rds"
-  vpc_id = aws_vpc.vpc.id
-
-  ingress {
-    from_port   = 5432
-    to_port     = 5432
-    protocol    = "tcp"
-    description = "Postgres"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "terraform security group rds"
-  }
-}
