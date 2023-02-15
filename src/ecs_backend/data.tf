@@ -27,6 +27,12 @@ data "aws_vpc" "vpc" {
   }
 }
 
+data "aws_subnets" "public_subnets_backend_lb" {
+  tags = {
+    Name = "terraform public subnet application loadbalancer*"
+  }
+}
+
 data "aws_subnets" "private_subnets_backend" {
   tags = {
     Name = "terraform private subnet application*"
