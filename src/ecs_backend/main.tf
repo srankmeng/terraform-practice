@@ -21,10 +21,10 @@ resource "aws_ecs_task_definition" "backend_task" {
     {
       "name": "backend_task",
       "image": "${data.aws_ecr_repository.backend_ecr.repository_url}",
-      "environment": ${jsonencode([
+      "secrets": ${jsonencode([
         {
           "name": "DB_PASSWORD",
-          "value": "${data.aws_secretsmanager_secret_version.terraform_db_credentials.secret_string}",
+          "valueFrom": "${data.aws_secretsmanager_secret_version.terraform_db_credentials.arn}",
         }
       ])},
       "essential": true,
