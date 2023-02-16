@@ -85,10 +85,10 @@ resource "aws_security_group" "service_security_group" {
   }
 }
 
-resource "aws_alb" "backend_alb" {
+resource "aws_lb" "backend_alb" {
   name               = "backend-alb"
   load_balancer_type = "application"
-  subnets = data.aws_subnets.private_subnets_backend.ids
+  subnets = data.aws_subnets.public_subnets_backend_lb.ids
   security_groups = [aws_security_group.load_balancer_security_group.id]
 
   tags = {
@@ -124,7 +124,7 @@ resource "aws_lb_target_group" "backend_target_group" {
 }
 
 resource "aws_lb_listener" "backend_listener" {
-  load_balancer_arn = aws_alb.backend_alb.arn
+  load_balancer_arn = aws_lb.backend_alb.arn
   port              = "80"
   protocol          = "HTTP"
   default_action {

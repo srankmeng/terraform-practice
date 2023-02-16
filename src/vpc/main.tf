@@ -56,15 +56,15 @@ resource "aws_subnet" "public_subnets_frontend" {
   }
 }
 
-resource "aws_subnet" "public_subnets_api_gw" {
-  count      = length(var.public_subnet_api_gw_cidrs)
+resource "aws_subnet" "public_subnets_backend_lb" {
+  count      = length(var.public_subnet_backend_lb_cidrs)
   vpc_id     = aws_vpc.vpc.id
-  cidr_block = element(var.public_subnet_api_gw_cidrs, count.index)
+  cidr_block = element(var.public_subnet_backend_lb_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
   map_public_ip_on_launch = true
   
   tags = {
-    Name = "terraform public subnet api gw ${count.index + 1}"
+    Name = "terraform public subnet application loadbalancer ${count.index + 1}"
   }
 }
 
@@ -103,7 +103,7 @@ resource "aws_route_table" "route_table_frontend" {
   }
 }
 
-resource "aws_route_table" "route_table_api_gw" {
+resource "aws_route_table" "route_table_backend_lb" {
   vpc_id = aws_vpc.vpc.id
   
   route {
@@ -112,7 +112,7 @@ resource "aws_route_table" "route_table_api_gw" {
   }
   
   tags = {
-    Name = "terraform api gw route table"
+    Name = "terraform application loadbalancer route table"
   }
 }
 
@@ -143,10 +143,10 @@ resource "aws_route_table_association" "public_subnet_asso_frontend" {
   route_table_id = aws_route_table.route_table_frontend.id
 }
 
-resource "aws_route_table_association" "public_subnet_asso_api_gw" {
-  count = length(var.public_subnet_api_gw_cidrs)
-  subnet_id = element(aws_subnet.public_subnets_api_gw[*].id, count.index)
-  route_table_id = aws_route_table.route_table_api_gw.id
+resource "aws_route_table_association" "public_subnet_asso_backend_lb" {
+  count = length(var.public_subnet_backend_lb_cidrs)
+  subnet_id = element(aws_subnet.public_subnets_backend_lb[*].id, count.index)
+  route_table_id = aws_route_table.route_table_backend_lb.id
 }
 
 resource "aws_route_table_association" "private_subnet_asso_backend" {

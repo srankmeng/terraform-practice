@@ -33,8 +33,6 @@ data "aws_subnets" "public_subnets_frontend" {
   }
 }
 
-data "aws_lb" "backend_alb" {
-  tags = {
-    Name = "terraform backend alb"
-  }
+data "aws_api_gateway_rest_api" "api_gw" {
+  name = "api_gw"
 }

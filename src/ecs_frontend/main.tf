@@ -24,7 +24,7 @@ resource "aws_ecs_task_definition" "frontend_task" {
       "environment": ${jsonencode([
         {
           "name": "API_URL",
-          "value": "http://${data.aws_lb.backend_alb.dns_name}/users",
+          "value": "https://${data.aws_api_gateway_rest_api.api_gw.id}.execute-api.${var.region}.amazonaws.com/dev/users",
         }
       ])},
       "essential": true,
