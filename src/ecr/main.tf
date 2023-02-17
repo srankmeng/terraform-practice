@@ -31,3 +31,12 @@ resource "aws_ecr_repository" "backend_ecr" {
     Name = "terraform backend ecr"
   }
 }
+
+resource "aws_ecr_repository" "backend_ecr_2" {
+  name = "tf-nest-2"
+  force_delete = true
+
+  tags = {
+    Name = "terraform backend ecr 2"
+  }
+}
