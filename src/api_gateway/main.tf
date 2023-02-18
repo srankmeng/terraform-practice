@@ -69,6 +69,28 @@ resource "aws_api_gateway_integration" "integration2" {
   type                    = "HTTP_PROXY"
   uri                     = "http://${data.aws_lb.backend2_alb.dns_name}/products"
 }
+
+resource "aws_api_gateway_resource" "resource3" {
+  rest_api_id = aws_api_gateway_rest_api.api_gw.id
+  parent_id   = aws_api_gateway_resource.resource2.id
+  path_part   = "product-users"
+}
+
+resource "aws_api_gateway_method" "method3" {
+  rest_api_id   = aws_api_gateway_rest_api.api_gw.id
+  resource_id   = aws_api_gateway_resource.resource3.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "integration3" {
+  rest_api_id = aws_api_gateway_rest_api.api_gw.id
+  resource_id = aws_api_gateway_resource.resource3.id
+  http_method = aws_api_gateway_method.method3.http_method
+  integration_http_method = "GET"
+  type                    = "HTTP_PROXY"
+  uri                     = "http://${data.aws_lb.backend2_alb.dns_name}/products/product-users"
+}
 resource "aws_api_gateway_deployment" "ApiDeploymentDev" {
   rest_api_id = aws_api_gateway_rest_api.api_gw.id
   description = "Deployed at ${timestamp()}"
@@ -82,6 +104,9 @@ resource "aws_api_gateway_deployment" "ApiDeploymentDev" {
       aws_api_gateway_resource.resource2,
       aws_api_gateway_method.method2,
       aws_api_gateway_integration.integration2,
+      aws_api_gateway_resource.resource3,
+      aws_api_gateway_method.method3,
+      aws_api_gateway_integration.integration3,
     ]))
   }
 
