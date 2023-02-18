@@ -39,10 +39,25 @@ data "aws_subnets" "private_subnets_backend" {
   }
 }
 
+data "aws_subnet" "private_subnet_backend" {
+  for_each = toset(data.aws_subnets.private_subnets_backend.ids)
+  id       = each.value
+}
+
 data "aws_secretsmanager_secret" "terraform_db" {
   name = "terraform_postgres_db"
 }
 
 data "aws_secretsmanager_secret_version" "terraform_db_credentials" {
   secret_id = data.aws_secretsmanager_secret.terraform_db.id
+}
+
+data "aws_service_discovery_dns_namespace" "ecs_dns" {
+  name = "private.local"
+  type = "DNS_PRIVATE"
+}
+
+data "aws_service_discovery_service" "ecs_users_service" {
+  name         = "users"
+  namespace_id = data.aws_service_discovery_dns_namespace.ecs_dns.id
 }

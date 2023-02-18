@@ -64,17 +64,30 @@ resource "aws_ecs_service" "backend_service" {
     assign_public_ip = true
     security_groups  = [aws_security_group.service_security_group.id]
   }
+
+  service_registries {
+    registry_arn = data.aws_service_discovery_service.ecs_users_service.arn
+  }
 }
 
 resource "aws_security_group" "service_security_group" {
   name = "terraform-sv-sg-api"
   vpc_id = data.aws_vpc.vpc.id
 
+  # allow speific load balancer
   ingress {
     from_port = 0
     to_port   = 0
     protocol  = "-1"
     security_groups = [aws_security_group.load_balancer_security_group.id]
+  }
+
+  # allow same private subnet
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = [for subnet in data.aws_subnet.private_subnet_backend : subnet.cidr_block]
   }
 
   egress {

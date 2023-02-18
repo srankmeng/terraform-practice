@@ -46,3 +46,18 @@ data "aws_secretsmanager_secret" "terraform_db" {
 data "aws_secretsmanager_secret_version" "terraform_db_credentials" {
   secret_id = data.aws_secretsmanager_secret.terraform_db.id
 }
+
+data "aws_service_discovery_dns_namespace" "ecs_dns" {
+  name = "private.local"
+  type = "DNS_PRIVATE"
+}
+
+data "aws_service_discovery_service" "ecs_products_service" {
+  name         = "products"
+  namespace_id = data.aws_service_discovery_dns_namespace.ecs_dns.id
+}
+
+data "aws_service_discovery_service" "ecs_users_service" {
+  name         = "users"
+  namespace_id = data.aws_service_discovery_dns_namespace.ecs_dns.id
+}

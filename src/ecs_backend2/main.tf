@@ -27,6 +27,12 @@ resource "aws_ecs_task_definition" "backend2_task" {
           "valueFrom": "${data.aws_secretsmanager_secret_version.terraform_db_credentials.arn}",
         }
       ])},
+      "environment": ${jsonencode([
+        {
+          "name": "USER_API_URL",
+          "value": "http://${data.aws_service_discovery_service.ecs_users_service.name}.${data.aws_service_discovery_dns_namespace.ecs_dns.name}:5000",
+        }
+      ])},
       "essential": true,
       "portMappings": [
         {
@@ -63,6 +69,10 @@ resource "aws_ecs_service" "backend2_service" {
     subnets = data.aws_subnets.private_subnets_backend.ids
     assign_public_ip = true
     security_groups  = [aws_security_group.service2_security_group.id]
+  }
+
+  service_registries {
+    registry_arn = data.aws_service_discovery_service.ecs_products_service.arn
   }
 }
 
