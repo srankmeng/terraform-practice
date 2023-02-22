@@ -14,13 +14,13 @@ provider "aws" {
   profile = var.profile
 }
 
-resource "aws_ecs_task_definition" "backend_task" {
-  family                   = "backend_task"
+resource "aws_ecs_task_definition" "backend_users_task" {
+  family                   = "backend_users_task"
   container_definitions    = <<DEFINITION
   [
     {
-      "name": "backend_task",
-      "image": "${data.aws_ecr_repository.backend_ecr.repository_url}",
+      "name": "backend_users_task",
+      "image": "${data.aws_ecr_repository.backend_users_ecr.repository_url}",
       "secrets": ${jsonencode([
         {
           "name": "DB_PASSWORD",
@@ -46,35 +46,48 @@ resource "aws_ecs_task_definition" "backend_task" {
   execution_role_arn       = data.aws_iam_role.ecsTaskExecutionRole.arn
 }
 
-resource "aws_ecs_service" "backend_service" {
-  name            = "backend_service"
+resource "aws_ecs_service" "backend_users_service" {
+  name            = "backend_users_service"
   cluster         = data.aws_ecs_cluster.cluster.id
-  task_definition = aws_ecs_task_definition.backend_task.arn
+  task_definition = aws_ecs_task_definition.backend_users_task.arn
   launch_type     = "FARGATE"
   desired_count   = 1
 
   load_balancer {
-    target_group_arn = aws_lb_target_group.backend_target_group.arn
-    container_name   = aws_ecs_task_definition.backend_task.family
+    target_group_arn = aws_lb_target_group.backend_users_target_group.arn
+    container_name   = aws_ecs_task_definition.backend_users_task.family
     container_port   = 5000
   }
 
   network_configuration {
     subnets = data.aws_subnets.private_subnets_backend.ids
     assign_public_ip = true
-    security_groups  = [aws_security_group.service_security_group.id]
+    security_groups  = [aws_security_group.service_users_security_group.id]
+  }
+
+  service_registries {
+    registry_arn = data.aws_service_discovery_service.ecs_users_service.arn
   }
 }
 
-resource "aws_security_group" "service_security_group" {
-  name = "terraform-sv-sg-api"
+resource "aws_security_group" "service_users_security_group" {
+  name = "terraform-sv-users-sg-api"
   vpc_id = data.aws_vpc.vpc.id
 
+  # allow speific load balancer
   ingress {
     from_port = 0
     to_port   = 0
     protocol  = "-1"
-    security_groups = [aws_security_group.load_balancer_security_group.id]
+    security_groups = [aws_security_group.lb_users_security_group.id]
+  }
+
+  # allow same private subnet
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = [for subnet in data.aws_subnet.private_subnet_backend : subnet.cidr_block]
   }
 
   egress {
@@ -85,19 +98,19 @@ resource "aws_security_group" "service_security_group" {
   }
 }
 
-resource "aws_lb" "backend_alb" {
-  name               = "backend-alb"
+resource "aws_lb" "backend_users_alb" {
+  name               = "backend-users-alb"
   load_balancer_type = "application"
   subnets = data.aws_subnets.public_subnets_backend_lb.ids
-  security_groups = [aws_security_group.load_balancer_security_group.id]
+  security_groups = [aws_security_group.lb_users_security_group.id]
 
   tags = {
-    Name = "terraform backend alb"
+    Name = "terraform backend users alb"
   }
 }
 
-resource "aws_security_group" "load_balancer_security_group" {
-  name = "terraform-lb-sg-api"
+resource "aws_security_group" "lb_users_security_group" {
+  name = "terraform-lb-users-sg-api"
   vpc_id = data.aws_vpc.vpc.id
 
   ingress {
@@ -115,20 +128,20 @@ resource "aws_security_group" "load_balancer_security_group" {
   }
 }
 
-resource "aws_lb_target_group" "backend_target_group" {
-  name        = "backend-target-group"
+resource "aws_lb_target_group" "backend_users_target_group" {
+  name        = "backend-users-target-group"
   port        = 80
   protocol    = "HTTP"
   target_type = "ip"
   vpc_id      = data.aws_vpc.vpc.id
 }
 
-resource "aws_lb_listener" "backend_listener" {
-  load_balancer_arn = aws_lb.backend_alb.arn
+resource "aws_lb_listener" "backend_users_listener" {
+  load_balancer_arn = aws_lb.backend_users_alb.arn
   port              = "80"
   protocol          = "HTTP"
   default_action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.backend_target_group.arn
+    target_group_arn = aws_lb_target_group.backend_users_target_group.arn
   }
 }
