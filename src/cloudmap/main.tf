@@ -23,9 +23,9 @@ resource "aws_service_discovery_private_dns_namespace" "ecs_dns" {
   }
 }
 
-resource "aws_service_discovery_service" "ecs_service" {
+resource "aws_service_discovery_service" "ecs_service_users" {
   name = "users"
-  description = "terraform ecs service"
+  description = "terraform ecs service users"
 
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.ecs_dns.id
@@ -41,9 +41,9 @@ resource "aws_service_discovery_service" "ecs_service" {
   }
 }
 
-resource "aws_service_discovery_service" "ecs_service2" {
+resource "aws_service_discovery_service" "ecs_service_products" {
   name = "products"
-  description = "terraform ecs service2"
+  description = "terraform ecs service products"
 
   dns_config {
     namespace_id = aws_service_discovery_private_dns_namespace.ecs_dns.id

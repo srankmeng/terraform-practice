@@ -23,20 +23,20 @@ resource "aws_ecr_repository" "frontend_ecr" {
   }
 }
 
-resource "aws_ecr_repository" "backend_ecr" {
-  name = "tf-nest"
+resource "aws_ecr_repository" "backend_users_ecr" {
+  name = "tf-nest-users"
   force_delete = true
 
   tags = {
-    Name = "terraform backend ecr"
+    Name = "terraform backend users ecr"
   }
 }
 
-resource "aws_ecr_repository" "backend_ecr_2" {
-  name = "tf-nest-2"
+resource "aws_ecr_repository" "backend_products_ecr" {
+  name = "tf-nest-products"
   force_delete = true
 
   tags = {
-    Name = "terraform backend ecr 2"
+    Name = "terraform backend products ecr"
   }
 }

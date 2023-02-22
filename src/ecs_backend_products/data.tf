@@ -1,5 +1,5 @@
-data "aws_ecr_repository" "backend2_ecr" {
-  name = "tf-nest-2"
+data "aws_ecr_repository" "backend_products_ecr" {
+  name = "tf-nest-products"
 }
 
 data "aws_ecs_cluster" "cluster" {

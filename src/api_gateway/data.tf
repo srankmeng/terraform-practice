@@ -1,11 +1,11 @@
-data "aws_lb" "backend_alb" {
+data "aws_lb" "backend_users_alb" {
   tags = {
-    Name = "terraform backend alb"
+    Name = "terraform backend users alb"
   }
 }
 
-data "aws_lb" "backend2_alb" {
+data "aws_lb" "backend_products_alb" {
   tags = {
-    Name = "terraform backend2 alb"
+    Name = "terraform backend products alb"
   }
 }
