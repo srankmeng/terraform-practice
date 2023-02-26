@@ -145,3 +145,16 @@ resource "aws_lb_listener" "backend_users_listener" {
     target_group_arn = aws_lb_target_group.backend_users_target_group.arn
   }
 }
+
+resource "aws_vpc_endpoint" "secret" {
+  vpc_id = data.aws_vpc.vpc.id
+  service_name = "com.amazonaws.${var.region}.secretsmanager"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [aws_security_group.service_users_security_group.id]
+  subnet_ids = data.aws_subnets.private_subnets_backend.ids
+  private_dns_enabled = true
+  tags = {
+    "Name" = "terraform secrect vpc endpoint"
+  }
+}
+

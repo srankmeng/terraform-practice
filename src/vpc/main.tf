@@ -31,25 +31,25 @@ resource "aws_internet_gateway" "igw" {
   }
 }
 
-resource "aws_eip" "nat_eip" {
-  vpc        = true
-  depends_on = [aws_internet_gateway.igw]
-}
-resource "aws_nat_gateway" "nat" {
-  subnet_id     = element(aws_subnet.public_subnets_frontend.*.id, 0)
-  allocation_id = aws_eip.nat_eip.id
-  depends_on    = [aws_internet_gateway.igw]
-  tags = {
-    Name = "terraform nat"
-  }
-}
+# resource "aws_eip" "nat_eip" {
+#   vpc        = true
+#   depends_on = [aws_internet_gateway.igw]
+# }
+# resource "aws_nat_gateway" "nat" {
+#   subnet_id     = element(aws_subnet.public_subnets_frontend.*.id, 0)
+#   allocation_id = aws_eip.nat_eip.id
+#   depends_on    = [aws_internet_gateway.igw]
+#   tags = {
+#     Name = "terraform nat"
+#   }
+# }
 
 resource "aws_subnet" "public_subnets_frontend" {
   count      = length(var.public_subnet_frontend_cidrs)
   vpc_id     = aws_vpc.vpc.id
   cidr_block = element(var.public_subnet_frontend_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
-  map_public_ip_on_launch = true
+  # map_public_ip_on_launch = true # when use nat gateway
   
   tags = {
     Name = "terraform public subnet web ${count.index + 1}"
@@ -61,7 +61,7 @@ resource "aws_subnet" "public_subnets_backend_lb" {
   vpc_id     = aws_vpc.vpc.id
   cidr_block = element(var.public_subnet_backend_lb_cidrs, count.index)
   availability_zone = element(var.azs, count.index)
-  map_public_ip_on_launch = true
+  # map_public_ip_on_launch = true # when use nat gateway
   
   tags = {
     Name = "terraform public subnet application loadbalancer ${count.index + 1}"
@@ -119,10 +119,10 @@ resource "aws_route_table" "route_table_backend_lb" {
 resource "aws_route_table" "route_table_backend" {
   vpc_id = aws_vpc.vpc.id
 
-  route {
-    cidr_block = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.nat.id
-  }
+  # route {
+  #   cidr_block = "0.0.0.0/0"
+  #   nat_gateway_id = aws_nat_gateway.nat.id
+  # }
   
   tags = {
     Name = "terraform application route table"
