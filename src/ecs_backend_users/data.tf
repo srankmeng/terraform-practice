@@ -44,6 +44,12 @@ data "aws_subnet" "private_subnet_backend" {
   id       = each.value
 }
 
+data "aws_route_table" "route_table_backend" {
+  tags = {
+    Name = "terraform application route table"
+  }
+}
+
 data "aws_secretsmanager_secret" "terraform_db" {
   name = "terraform_postgres_db"
 }

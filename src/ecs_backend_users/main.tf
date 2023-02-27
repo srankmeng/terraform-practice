@@ -34,6 +34,15 @@ resource "aws_ecs_task_definition" "backend_users_task" {
           "hostPort": 5000
         }
       ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/tf-backend-users",
+          "awslogs-region": "${var.region}",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
       "memory": 512,
       "cpu": 256
     }
@@ -67,6 +76,13 @@ resource "aws_ecs_service" "backend_users_service" {
 
   service_registries {
     registry_arn = data.aws_service_discovery_service.ecs_users_service.arn
+  }
+}
+
+resource "aws_cloudwatch_log_group" "logs" {
+  name = "/ecs/tf-backend-users"
+  tags = {
+    Name = "terraform logs vpc endpoint - users"
   }
 }
 
@@ -154,7 +170,52 @@ resource "aws_vpc_endpoint" "secret" {
   subnet_ids = data.aws_subnets.private_subnets_backend.ids
   private_dns_enabled = true
   tags = {
-    "Name" = "terraform secrect vpc endpoint"
+    "Name" = "terraform secrect vpc endpoint - users"
   }
 }
 
+resource "aws_vpc_endpoint" "ecr" {
+  vpc_id = data.aws_vpc.vpc.id
+  service_name = "com.amazonaws.${var.region}.ecr.dkr"
+  vpc_endpoint_type = "Interface"
+  security_group_ids = [aws_security_group.service_users_security_group.id]
+  subnet_ids = data.aws_subnets.private_subnets_backend.ids
+  private_dns_enabled = true
+  tags = {
+    "Name" = "terraform ecr.dkr vpc endpoint - users"
+  }
+}
+
+resource "aws_vpc_endpoint" "ecr_api" {
+  vpc_id = data.aws_vpc.vpc.id
+  service_name = "com.amazonaws.${var.region}.ecr.api"
+  vpc_endpoint_type = "Interface"
+  private_dns_enabled = true
+  security_group_ids = [aws_security_group.service_users_security_group.id]
+  subnet_ids = data.aws_subnets.private_subnets_backend.ids
+  tags = {
+    "Name" = "terraform ecr.api vpc endpoint - users"
+  }
+}
+
+resource "aws_vpc_endpoint" "s3" {
+  vpc_id = data.aws_vpc.vpc.id
+  service_name = "com.amazonaws.${var.region}.s3"
+  vpc_endpoint_type = "Gateway"
+  route_table_ids = [data.aws_route_table.route_table_backend.id]
+  tags = {
+    "Name" = "terraform s3(ecr) vpc endpoint - users"
+  }
+}
+
+resource "aws_vpc_endpoint" "logs" {
+  vpc_id              = data.aws_vpc.vpc.id
+  private_dns_enabled = true
+  service_name        = "com.amazonaws.${var.region}.logs"
+  vpc_endpoint_type   = "Interface"
+  security_group_ids = [aws_security_group.service_users_security_group.id]
+  subnet_ids = data.aws_subnets.private_subnets_backend.ids
+  tags = {
+    Name = "terraform logs vpc endpoint - users"
+  }
+}
