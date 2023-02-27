@@ -49,6 +49,15 @@ resource "aws_ecs_task_definition" "backend_products_task" {
           "hostPort": 5001
         }
       ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/tf-backend-products",
+          "awslogs-region": "${var.region}",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
       "memory": 512,
       "cpu": 256
     }
@@ -85,6 +94,13 @@ resource "aws_ecs_service" "backend_products_service" {
   }
 }
 
+resource "aws_cloudwatch_log_group" "logs" {
+  name = "/ecs/tf-backend-products"
+  tags = {
+    Name = "terraform logs - products"
+  }
+}
+
 resource "aws_security_group" "service_products_security_group" {
   name = "terraform-sv-products-sg-api"
   vpc_id = data.aws_vpc.vpc.id
@@ -116,7 +132,7 @@ resource "aws_lb" "backend_products_alb" {
 }
 
 resource "aws_security_group" "lb_products_security_group" {
-  name = "terraform-lb2-sg-api"
+  name = "terraform-lb-products-sg-api"
   vpc_id = data.aws_vpc.vpc.id
 
   ingress {
@@ -150,8 +166,4 @@ resource "aws_lb_listener" "backend_products_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.backend_products_target_group.arn
   }
-}
-
-resource "aws_cloudwatch_log_group" "log" {
-  name = "/ecs/tf-backend"
 }
