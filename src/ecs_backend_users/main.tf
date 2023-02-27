@@ -34,6 +34,15 @@ resource "aws_ecs_task_definition" "backend_users_task" {
           "hostPort": 5000
         }
       ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/tf-backend-users",
+          "awslogs-region": "${var.region}",
+          "awslogs-stream-prefix": "ecs",
+          "awslogs-create-group": "true"
+        }
+      },
       "memory": 512,
       "cpu": 256
     }
@@ -67,6 +76,13 @@ resource "aws_ecs_service" "backend_users_service" {
 
   service_registries {
     registry_arn = data.aws_service_discovery_service.ecs_users_service.arn
+  }
+}
+
+resource "aws_cloudwatch_log_group" "logs" {
+  name = "/ecs/tf-backend-users"
+  tags = {
+    Name = "terraform logs - users"
   }
 }
 
