@@ -31,7 +31,6 @@ resource "aws_s3_bucket_website_configuration" "site" {
   }
 }
 
-
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
   comment = "terraform"
 }
@@ -66,6 +65,13 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   default_root_object = "index.html"
   enabled             = true
   is_ipv6_enabled     = true
+  wait_for_deployment = false
+
+  custom_error_response {
+    error_code = 403
+    response_code = 200
+    response_page_path = "/index.html"
+  }
 
   default_cache_behavior {
     allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
@@ -88,7 +94,7 @@ resource "aws_cloudfront_distribution" "s3_distribution" {
   price_class = "PriceClass_200"
 
   tags = {
-    Name        = "terraform s3 distribution"
+    Name = "terraform s3 distribution"
   }
 
   restrictions {
