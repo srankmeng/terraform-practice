@@ -130,6 +130,24 @@ resource "aws_iam_role_policy_attachment" "ecsTaskExecutionRole_policy" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
 
+resource "aws_iam_role_policy" "sm_policy" {
+  name = "terraform_sm_access_permissions"
+  role = aws_iam_role.ecsTaskExecutionRole.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "secretsmanager:GetSecretValue",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
+      },
+    ]
+  })
+}
+
 resource "aws_ecs_task_definition" "api_task" {
   family                   = "api_task"
   container_definitions    = <<DEFINITION
@@ -137,6 +155,12 @@ resource "aws_ecs_task_definition" "api_task" {
     {
       "name": "api_task",
       "image": "${aws_ecr_repository.api_ecr.repository_url}",
+      "secrets": ${jsonencode([
+        {
+          "name": "DB_PASSWORD",
+          "valueFrom": "${aws_secretsmanager_secret_version.db_secret_version.arn}",
+        }
+      ])},
       "essential": true,
       "portMappings": [
         {
@@ -254,4 +278,97 @@ resource "aws_lb_listener" "alb_listener" {
     type             = "forward"
     target_group_arn = aws_lb_target_group.alb_target_group.arn
   }
+}
+
+########################
+### secret manager
+########################
+resource "random_password" "random_db_password" {
+  length = 16
+  special = false
+}
+
+locals {
+  db_password = random_password.random_db_password.result
+}
+
+resource "aws_secretsmanager_secret" "db_secret" {
+  name = "terraform_postgres_db"
+  description = "terraform secret"
+  recovery_window_in_days = 0
+
+  tags = {
+    Name = "terraform secret"
+  }
+}
+
+resource "aws_secretsmanager_secret_version" "db_secret_version" {
+  secret_id = aws_secretsmanager_secret.db_secret.id
+  secret_string = local.db_password
+}
+
+
+########################
+### rds
+########################
+resource "aws_subnet" "database_subnets" {
+  count      = length(var.database_subnet_cidrs)
+  vpc_id     = aws_vpc.vpc.id
+  cidr_block = element(var.database_subnet_cidrs, count.index)
+  availability_zone = element(var.azs, count.index)
+  
+  tags = {
+    Name = "terraform database subnet ${count.index + 1}"
+  }
+}
+
+resource "aws_route_table" "route_table_database" {
+  vpc_id = aws_vpc.vpc.id
+  
+  tags = {
+    Name = "terraform database route table"
+  }
+}
+
+resource "aws_route_table_association" "database_subnet_asso" {
+  count = length(var.database_subnet_cidrs)
+  subnet_id = element(aws_subnet.database_subnets[*].id, count.index)
+  route_table_id = aws_route_table.route_table_database.id
+}
+
+resource "aws_db_subnet_group" "db_subnet_group" {
+  name       = "db-subnet-group"
+  subnet_ids = [for subnet in aws_subnet.database_subnets : subnet.id]
+}
+
+resource "aws_security_group" "rds" {
+  name = "terraform-sg-rds"
+  vpc_id = aws_vpc.vpc.id
+
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    description = "Postgres"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "terraform security group rds"
+  }
+}
+
+resource "aws_db_instance" "rds" {
+  identifier             = "rds-terraform"
+  instance_class         = "db.t2.micro"
+  allocated_storage      = 5
+  engine                 = "postgres"
+  engine_version         = "12.13"
+  skip_final_snapshot    = true
+  publicly_accessible    = true
+  db_subnet_group_name   = aws_db_subnet_group.db_subnet_group.id
+  vpc_security_group_ids = [aws_security_group.rds.id]
+  db_name                = "terraform_db"
+  username               = "postgres"
+  password               = local.db_password
 }
