@@ -1,0 +1,25 @@
+
+
+docker tag d1bfe343bd9e 761152224652.dkr.ecr.ap-southeast-1.amazonaws.com/tf-nuxt
+
+docker push 761152224652.dkr.ecr.ap-southeast-1.amazonaws.com/tf-nuxt
+
+aws ecs list-tasks --cluster tf_cluster --family frontend_task --output text > tasks.txt
+
+aws ecs run-task \
+    --cluster tf_cluster \
+    --task-definition frontend_task \
+    --count 1 \
+    --launch-type "FARGATE" \
+    --network-configuration \
+    "awsvpcConfiguration={subnets=[\"subnet-0d7595a1366382629\"],securityGroups=[\"sg-046b771e18f495278\"],assignPublicIp=ENABLED}"
+
+aws datasync start-task-execution \
+    --task-arn arn:aws:datasync:ap-southeast-1:761152224652:task/task-023c0845be8c8293c \
+    --output text > task_execute_arn.txt
+
+aws datasync describe-task-execution \
+    --task-execution-arn arn:aws:datasync:ap-southeast-1:761152224652:task/task-023c0845be8c8293c/execution/exec-0b3bcebebfb355f2f \
+    --output text > downloading_result.txt
+
+aws s3 cp s3://async-tf-efs target_folder --recursive
