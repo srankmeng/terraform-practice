@@ -85,33 +85,3 @@ data "aws_iam_policy_document" "assume_role" {
     }
   }
 }
-
-data "aws_iam_policy_document" "datasync_s3_policy" {
-  statement {
-    actions = [
-      "s3:GetBucketLocation",
-      "s3:ListBucket",
-      "s3:ListBucketMultipartUploads",
-    ]
-
-    resources = [
-      "arn:aws:s3:::async-tf-efs",
-    ]
-  }
-
-  statement {
-    actions = [
-      "s3:AbortMultipartUpload",
-      "s3:DeleteObject",
-      "s3:GetObject",
-      "s3:ListMultipartUploadParts",
-      "s3:PutObjectTagging",
-      "s3:GetObjectTagging",
-      "s3:PutObject"
-    ]
-
-    resources = [
-      "arn:aws:s3:::async-tf-efs/*",
-    ]
-  }
-}
